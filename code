@@ -1,0 +1,57 @@
+import dash
+from dash import Dash, dcc, html
+import pandas as pd
+import plotly.express as px
+from dash.dependencies import Input, Output
+
+# Sample Data
+data = {
+    "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "Revenue": [12000, 15000, 13000, 17000, 18000, 20000, 22000, 21000, 19000, 23000, 25000, 27000],
+    "New_Customers": [100, 120, 110, 130, 140, 160, 170, 165, 150, 180, 190, 200],
+    "Orders": [300, 350, 320, 400, 410, 450, 470, 460, 430, 500, 520, 550]
+}
+
+df = pd.DataFrame(data)
+
+# Dash App
+app = Dash(__name__)
+app.layout = html.Div([
+    html.H1("📊 Business KPI Dashboard", style={"textAlign": "center"}),
+
+    html.Div([
+        html.Div([html.H3(f"Total Revenue: ${df['Revenue'].sum():,}")], className="three columns"),
+        html.Div([html.H3(f"Total Customers: {df['New_Customers'].sum():,}")], className="three columns"),
+        html.Div([html.H3(f"Total Orders: {df['Orders'].sum():,}")], className="three columns"),
+    ], style={"display": "flex", "justifyContent": "space-around"}),
+
+    dcc.Graph(id="revenue-chart", figure=px.line(df, x="Month", y="Revenue", title="Monthly Revenue Trend", markers=True)),
+    dcc.Graph(id="customers-chart", figure=px.bar(df, x="Month", y="New_Customers", title="New Customers per Month")),
+    dcc.Graph(id="orders-chart", figure=px.line(df, x="Month", y="Orders", title="Monthly Orders Trend", markers=True)),
+
+    html.H3("Data Table"),
+    html.Table([
+        html.Tr([html.Th(col) for col in df.columns])
+    ] + [
+        html.Tr([html.Td(df.iloc[i][col]) for col in df.columns]) for i in range(len(df))
+    ])
+])
+
+# Run the app in Jupyter Notebook using inline display
+import threading
+import webbrowser
+import socket
+
+def find_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("localhost", 0))
+        return s.getsockname()[1]
+
+port = find_free_port()
+url = f"http://127.0.0.1:{port}/"
+
+def open_browser():
+    webbrowser.open_new(url)
+
+threading.Timer(1.25, open_browser).start()
+app.run(debug=False, port=port)
